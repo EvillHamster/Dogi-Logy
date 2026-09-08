@@ -9,16 +9,32 @@ BOT_TOKEN = "8894849933:AAGnHR_WqLny6JeW4201HAKRMu1OpEl7ESs"
 CHAT_ID = "7651507310"
 
 def send_to_telegram(data):
-    """Отправляет данные в Telegram в фоновом потоке"""
     try:
-        message = (
-            "📋 *Новая заявка с сайта*\n\n"
-            f"📞 Телефон: {data.get('Phone', 'Не указан')}\n"
-            f"👤 Имя: {data.get('Name', 'Не указано')}\n"
-            f"💬 Соцсеть: {data.get('Social', 'Не указана')}\n"
-            f"✍️ Запрос: {data.get('Text', 'Не указан')}\n"
-            f"✅ Согласие: {data.get('Consent', 'Нет')}"
-        )
+        form_title = data.get('form_title')
+        
+        if form_title:
+            message = f"*{form_title}*\n\n"
+        else:
+            message = ""
+        
+        fields = {
+            '📞 Телефон': 'Phone',
+            '👤 Имя': 'Name',
+            '💬 Где с вами связаться?': 'Social',
+            '💰 Тариф': 'Tariff',
+            '📝 Текст сообщения': 'Text',
+            '✍️ Расскажите о себе': 'About',
+            '✅ Согласие на обработку': 'Consent'
+        }
+        
+        for label, key in fields.items():
+            value = data.get(key)
+            if value:
+                message += f"{label}: {value}\n"
+        
+        if not message.strip():
+            print("Нет данных для отправки")
+            return
         
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
         payload = {
@@ -26,25 +42,19 @@ def send_to_telegram(data):
             'text': message,
             'parse_mode': 'Markdown'
         }
-        # Таймаут 10 секунд, чтобы не висеть вечно
-        requests.post(url, json=payload, timeout=10)
+        requests.post(url, json=payload, timeout=15)
+        print(f"Сообщение отправлено: {form_title}")
     except Exception as e:
         print(f"Ошибка отправки в Telegram: {e}")
 
 @app.route('/webhook', methods=['POST', 'GET'])
 def handle_form():
-    # Для проверки GET-запросов (Тильда проверяет доступность)
     if request.method == 'GET':
         return 'Webhook is working', 200
     
-    # Получаем данные из формы
     data = request.form
-    
-    # Запускаем отправку в Telegram в фоновом потоке
     thread = threading.Thread(target=send_to_telegram, args=(data,))
     thread.start()
-    
-    # Сразу возвращаем ответ, чтобы не держать Тильду
     return 'OK', 200
 
 if __name__ == '__main__':
