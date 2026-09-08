@@ -17,6 +17,11 @@ def send_to_telegram(data):
         else:
             message = ""
         
+        # Получаем значение согласия
+        consent = data.get('Consent')
+        if consent == 'yes':
+            consent = 'Да'
+        
         fields = {
             '📞 Телефон': 'Phone',
             '👤 Имя': 'Name',
@@ -24,7 +29,7 @@ def send_to_telegram(data):
             '💰 Тариф': 'Tariff',
             '📝 Текст сообщения': 'Text',
             '✍️ Расскажите о себе': 'About',
-            '✅ Согласие на обработку': 'Consent'
+            '✅ Согласие на обработку': consent  # подставляем уже изменённое значение
         }
         
         for label, key in fields.items():
