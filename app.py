@@ -5,8 +5,8 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-BOT_TOKEN = "8894849933:AAGnHR_WqLny6JeW4201HAKRMu1OpEl7ESs"
-CHAT_ID = "7651507310"
+BOT_TOKEN = "8897054825:AAEXw76yW_aK0xoBO782TaUOES3KS2QCoDQ"
+CHAT_ID = "1305714512"
 
 def send_to_telegram(data):
     try:
