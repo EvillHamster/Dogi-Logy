@@ -18,9 +18,15 @@ def send_to_telegram(data):
             message = ""
         
         # Получаем значение согласия
-        consent = data.get('Consent')
-        if consent == 'yes':
-            consent = 'Да'
+        consent_value = data.get('Consent')
+        
+        # Проверяем все возможные варианты "Да"
+        if consent_value in ('yes', 'on', '1', 'true', 'True', 'YES', 'ON'):
+            consent_display = 'Да'
+        elif consent_value:
+            consent_display = consent_value  # если пришло что-то другое
+        else:
+            consent_display = None  # если поля нет
         
         fields = {
             '📞 Телефон': 'Phone',
@@ -28,12 +34,19 @@ def send_to_telegram(data):
             '💬 Где с вами связаться?': 'Social',
             '💰 Тариф': 'Tariff',
             '📝 Текст сообщения': 'Text',
-            '✍️ Расскажите о себе': 'About',
-            '✅ Согласие на обработку': consent  # подставляем уже изменённое значение
+            '✍️ Расскажите о себе': 'About'
         }
         
+        # Согласие добавляем только если оно есть
+        if consent_display:
+            fields['✅ Согласие на обработку'] = consent_display
+        
         for label, key in fields.items():
-            value = data.get(key)
+            if isinstance(key, str):
+                value = data.get(key)
+            else:
+                value = key
+            
             if value:
                 message += f"{label}: {value}\n"
         
@@ -58,6 +71,13 @@ def handle_form():
         return 'Webhook is working', 200
     
     data = request.form
+    
+    # ОТЛАДКА
+    print("=== ВСЕ ПОЛЯ ИЗ ТИЛЬДЫ ===")
+    for key, value in data.items():
+        print(f"{key}: {value}")
+    print("============================")
+    
     thread = threading.Thread(target=send_to_telegram, args=(data,))
     thread.start()
     return 'OK', 200
